@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=7" />
+  <link rel="stylesheet" href="styles.css?v=10" />
 </head>
 <body>
   <div class="bg-glow bg-glow--1" aria-hidden="true"></div>
@@ -19,32 +19,27 @@
     <header class="header">
       <div class="header__badge">F5AI · Telegram</div>
       <h1 class="header__title">Text Fix Studio</h1>
-      <p class="header__subtitle">Вставьте текст и выберите тип правки — ИИ вернёт исправленный вариант</p>
+      <p class="header__subtitle">Вставьте текст, выберите правку — результат появится в этом же поле</p>
     </header>
 
     <main class="main">
-      <label class="input-label" for="user-input">Ваш текст</label>
+      <div class="input-head">
+        <label class="input-label" for="user-input">Ваш текст</label>
+        <span class="input-mode" id="input-mode" hidden></span>
+      </div>
       <textarea
         id="user-input"
         class="input-field input-field--main"
-        rows="5"
+        rows="8"
         placeholder="Вставьте сюда текст с ошибками или черновик…"
         required
       ></textarea>
+      <div class="input-actions">
+        <button type="button" class="btn btn--ghost" id="copy-btn">Копировать текст</button>
+      </div>
 
       <p class="section-label">Тип правки</p>
       <section class="cards" id="prompt-cards" aria-label="Режимы исправления"></section>
-
-      <section class="result" id="result-panel" hidden>
-        <div class="result__head">
-          <h2 class="result__title" id="result-title">Исправленный текст</h2>
-          <div class="result__actions">
-            <button type="button" class="btn btn--ghost" id="again-btn">Ещё</button>
-            <button type="button" class="btn btn--ghost" id="copy-btn">Копировать</button>
-          </div>
-        </div>
-        <div class="result__body result__body--text" id="result-body"></div>
-      </section>
     </main>
 
     <footer class="footer">
@@ -63,6 +58,6 @@
     <span class="toast__text" id="toast-text">Готово</span>
   </div>
 
-  <script src="app.js?v=8" type="module"></script>
+  <script src="app.js?v=10" type="module"></script>
 </body>
 </html>

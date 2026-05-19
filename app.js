@@ -30,20 +30,24 @@ const toastEl = document.getElementById("toast");
 const toastTextEl = document.getElementById("toast-text");
 const statusHintEl = document.getElementById("status-hint");
 const userInputEl = document.getElementById("user-input");
-const resultPanelEl = document.getElementById("result-panel");
-const resultTitleEl = document.getElementById("result-title");
-const resultBodyEl = document.getElementById("result-body");
+const inputModeEl = document.getElementById("input-mode");
 const copyBtnEl = document.getElementById("copy-btn");
-const againBtnEl = document.getElementById("again-btn");
 const loaderEl = document.getElementById("loader");
 
 let toastTimer = null;
-let lastResultText = "";
 let lastPromptId = null;
 let busy = false;
 
 const tg = window.Telegram?.WebApp;
 const CHAT_API_URLS = ["/api/chat", "/api/image"];
+
+function cleanAiText(text) {
+  let t = String(text || "").trim();
+  if (t.startsWith("```")) {
+    t = t.replace(/^```[\w]*\n?/, "").replace(/\n?```$/, "").trim();
+  }
+  return t;
+}
 
 function initTelegram() {
   if (!tg) return;
@@ -82,12 +86,6 @@ function renderCards() {
   });
 }
 
-function escapeHtml(str) {
-  const div = document.createElement("div");
-  div.textContent = str;
-  return div.innerHTML;
-}
-
 async function copyText(text) {
   if (navigator.clipboard?.writeText) {
     await navigator.clipboard.writeText(text);
@@ -123,20 +121,19 @@ function setLoading(on) {
   loaderEl.hidden = !on;
   loaderEl.setAttribute("aria-busy", on ? "true" : "false");
   cardsEl.querySelectorAll(".card").forEach((btn) => { btn.disabled = on; });
+  userInputEl.disabled = on;
 }
 
-function hideResult() {
-  resultPanelEl.hidden = true;
-  resultBodyEl.textContent = "";
-  lastResultText = "";
-}
+function applyCorrectedText(promptTitle, content) {
+  userInputEl.value = cleanAiText(content);
+  userInputEl.classList.add("input-field--updated");
+  setTimeout(() => userInputEl.classList.remove("input-field--updated"), 1200);
 
-function showTextResult(title, content) {
-  lastResultText = content;
-  resultTitleEl.textContent = title;
-  resultBodyEl.textContent = content;
-  resultPanelEl.hidden = false;
-  resultPanelEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  inputModeEl.textContent = `Применено: ${promptTitle}`;
+  inputModeEl.hidden = false;
+
+  userInputEl.focus();
+  userInputEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 async function askChat(prompt) {
@@ -147,7 +144,6 @@ async function askChat(prompt) {
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 90000);
-
   const body = JSON.stringify({
     instructions: prompt.text,
     userMessage,
@@ -155,26 +151,27 @@ async function askChat(prompt) {
 
   let lastError = null;
 
-  for (const url of CHAT_API_URLS) {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
-      signal: controller.signal,
-    });
+  try {
+    for (const url of CHAT_API_URLS) {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body,
+        signal: controller.signal,
+      });
 
-    if (res.status === 404) {
-      lastError = new Error("API не найден. Обновите сайт на Netlify.");
-      continue;
+      if (res.status === 404) {
+        lastError = new Error("API не найден. Обновите сайт на Netlify.");
+        continue;
+      }
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || data.error || `Ошибка ${res.status}`);
+      if (!data.content) throw new Error("Пустой ответ от модели");
+      return data;
     }
 
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.message || data.error || `Ошибка ${res.status}`);
-    if (!data.content) throw new Error("Пустой ответ от модели");
-    return data;
-  }
-
-  throw lastError || new Error("Сервер недоступен");
+    throw lastError || new Error("Сервер недоступен");
   } catch (err) {
     if (err.name === "AbortError") throw new Error("Превышено время ожидания");
     throw err;
@@ -202,9 +199,9 @@ async function handlePromptClick(id) {
 
   try {
     const data = await askChat(prompt);
-    showTextResult(`Исправлено · ${prompt.title}`, data.content);
-    statusHintEl.textContent = `Готово · ${data.model || "F5AI"}`;
-    showToast("Текст исправлен");
+    applyCorrectedText(prompt.title, data.content);
+    statusHintEl.textContent = `Готово · ${data.model || "F5AI"} · можно выбрать другую правку`;
+    showToast(`Текст обновлён: ${prompt.title}`);
     haptic("light");
     tg?.sendData?.(JSON.stringify({ action: "text_fixed", promptId: prompt.id }));
   } catch (err) {
@@ -223,17 +220,18 @@ async function handlePromptClick(id) {
     haptic("error");
   } finally {
     setLoading(false);
+    userInputEl.disabled = false;
   }
 }
 
-againBtnEl.addEventListener("click", () => {
-  if (lastPromptId) handlePromptClick(lastPromptId);
-});
-
 copyBtnEl.addEventListener("click", async () => {
-  if (!lastResultText) return;
+  const text = userInputEl.value.trim();
+  if (!text) {
+    showToast("Нечего копировать");
+    return;
+  }
   try {
-    await copyText(lastResultText);
+    await copyText(text);
     showToast("Скопировано");
     haptic("light");
   } catch {

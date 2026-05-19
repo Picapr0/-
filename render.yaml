@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: ai-image-studio
+    runtime: node
+    plan: free
+    buildCommand: ""
+    startCommand: node scripts/https-server.mjs
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: F5AI_API_KEY
+        sync: false

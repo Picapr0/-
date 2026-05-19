@@ -1,0 +1,5 @@
+{
+  "name": "telegram-prompt-app",
+  "private": true,
+  "type": "module"
+}

@@ -233,6 +233,19 @@ body {
   overflow-y: auto;
 }
 
+.result__body--text {
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: rgba(244, 244, 248, 0.95);
+  white-space: pre-wrap;
+  word-break: break-word;
+  user-select: text;
+}
+
+.input-field--main {
+  min-height: 120px;
+}
+
 .result__img {
   display: block;
   width: 100%;

@@ -1,27 +1,27 @@
 const PROMPTS = [
   {
-    id: "cowboy",
-    icon: "🤠",
-    title: "Ковбой",
-    description: "Дикий Запад · закат · фотореализм",
+    id: "grammar",
+    icon: "✏️",
+    title: "Грамматика",
+    description: "Орфография, пунктуация, опечатки",
     accent: "card--accent-1",
-    text: `генерируй изображение в стиле ковбоя: Суровый ковбой Дикого Запада, конец 1800-х годов. На нём: выцветшая кожаная куртка, ковбойская шляпа с широкими полями, на шее красный бандана. На поясе кобура с револьвером Colt. Фон: пыльная главная улица городка, деревянный салун с распашными дверями, лошади у коновязи. Закатное небо оранжевого и фиолетового цвета. Кинематографичное освещение, фотореализм, высокая детализация, тёплые тона, частицы пыли в воздухе.`,
+    text: `Ты профессиональный редактор русского языка. Исправь орфографию, пунктуацию и грамматические ошибки в тексте пользователя. Сохрани смысл и тон. Не добавляй пояснений — верни только исправленный текст.`,
   },
   {
-    id: "spongebob",
-    icon: "🧽",
-    title: "Губка Боб",
-    description: "Бикини Боттом · 2D мультфильм",
+    id: "style",
+    icon: "📝",
+    title: "Стиль и ясность",
+    description: "Убрать воду, улучшить читаемость",
     accent: "card--accent-2",
-    text: `Губка Боб Квадратные Штаны в полный рост. Жёлтая пористая квадратная губка с большими голубыми глазами, торчащими передними зубами с ямочкой, веснушками на щеках. Одет в белую рубашку с красным галстуком-бабочкой, коричневые квадратные штаны с ремнём и чёрные ботинки. Руки тонкие, резиновые. Фон: подводный город Бикини Боттом, кораллы, пузырьки воздуха. Яркие, насыщенные цвета: жёлтый, бирюзовый, розовый. Стиль мультсериала Nickelodeon, плоская 2D анимация, чёткие контуры, гротескная карикатура.`,
+    text: `Ты редактор. Улучши стиль текста: убери повторы, канцелярит и лишние слова, сделай формулировки ясными и естественными. Сохрани смысл. Верни только исправленный текст без комментариев.`,
   },
   {
-    id: "dafoe",
-    icon: "🎬",
-    title: "Уиллем Дефо",
-    description: "Студийный портрет · 8k",
+    id: "formal",
+    icon: "💼",
+    title: "Деловой стиль",
+    description: "Официально и вежливо",
     accent: "card--accent-3",
-    text: `Портрет актёра Уиллема Дефо. Очень выразительное угловатое лицо, широко посаженные голубые глаза, глубокие морщины вокруг глаз и на лбу, тонкие губы, слегка приоткрытый рот. Короткие светло-русые волосы с залысинами. Взгляд напряжённый, пронзительный, немного тревожный. Фон нейтральный, тёмно-серый. Студийное освещение, кольцевая лампа, резкий фокус на глазах. Фотореализм, высокая детализация текстур кожи, 8k.`,
+    text: `Ты редактор деловой переписки. Перепиши текст в вежливом официальном стиле, подходящем для писем, заявлений и сообщений коллегам. Сохрани смысл. Верни только исправленный текст.`,
   },
 ];
 
@@ -33,17 +33,17 @@ const userInputEl = document.getElementById("user-input");
 const resultPanelEl = document.getElementById("result-panel");
 const resultTitleEl = document.getElementById("result-title");
 const resultBodyEl = document.getElementById("result-body");
-const downloadBtnEl = document.getElementById("download-btn");
+const copyBtnEl = document.getElementById("copy-btn");
 const againBtnEl = document.getElementById("again-btn");
 const loaderEl = document.getElementById("loader");
 
 let toastTimer = null;
-let lastImageUrl = "";
+let lastResultText = "";
 let lastPromptId = null;
 let busy = false;
 
 const tg = window.Telegram?.WebApp;
-const IMAGE_API_URL = "/api/image";
+const CHAT_API_URL = "/api/chat";
 
 function initTelegram() {
   if (!tg) return;
@@ -64,14 +64,14 @@ function initTelegram() {
 function renderCards() {
   cardsEl.innerHTML = PROMPTS.map(
     (p) => `
-    <button type="button" class="card ${p.accent}" data-id="${p.id}" aria-label="Сгенерировать: ${p.title}">
+    <button type="button" class="card ${p.accent}" data-id="${p.id}" aria-label="Исправить: ${p.title}">
       <div class="card__inner">
         <span class="card__icon" aria-hidden="true">${p.icon}</span>
         <div class="card__body">
           <h2 class="card__title">${p.title}</h2>
           <p class="card__desc">${p.description}</p>
         </div>
-        <span class="card__tag">AI</span>
+        <span class="card__tag">Текст</span>
       </div>
     </button>
   `
@@ -80,6 +80,27 @@ function renderCards() {
   cardsEl.querySelectorAll(".card").forEach((btn) => {
     btn.addEventListener("click", () => handlePromptClick(btn.dataset.id));
   });
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+async function copyText(text) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.left = "-9999px";
+  document.body.appendChild(ta);
+  ta.select();
+  document.execCommand("copy");
+  document.body.removeChild(ta);
 }
 
 function showToast(message) {
@@ -106,47 +127,43 @@ function setLoading(on) {
 
 function hideResult() {
   resultPanelEl.hidden = true;
-  resultBodyEl.innerHTML = "";
-  lastImageUrl = "";
+  resultBodyEl.textContent = "";
+  lastResultText = "";
 }
 
-function buildImagePrompt(prompt) {
-  const extra = userInputEl.value.trim();
-  return extra ? `${prompt.text} ${extra}` : prompt.text;
-}
-
-function showImageResult(title, imageUrl) {
-  lastImageUrl = imageUrl;
+function showTextResult(title, content) {
+  lastResultText = content;
   resultTitleEl.textContent = title;
-  resultBodyEl.innerHTML = "";
-  const img = document.createElement("img");
-  img.className = "result__img";
-  img.alt = title;
-  img.loading = "lazy";
-  img.onload = () => resultPanelEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  img.onerror = () => showToast("Не удалось загрузить картинку");
-  img.src = imageUrl;
-  resultBodyEl.appendChild(img);
+  resultBodyEl.textContent = content;
   resultPanelEl.hidden = false;
+  resultPanelEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
-async function askImage(prompt) {
+async function askChat(prompt) {
+  const userMessage = userInputEl.value.trim();
+  if (!userMessage) {
+    throw new Error("Вставьте текст для исправления");
+  }
+
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 120000);
+  const timeout = setTimeout(() => controller.abort(), 90000);
 
   try {
-    const res = await fetch(IMAGE_API_URL, {
+    const res = await fetch(CHAT_API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: buildImagePrompt(prompt) }),
+      body: JSON.stringify({
+        instructions: prompt.text,
+        userMessage,
+      }),
       signal: controller.signal,
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.message || data.error || `Ошибка ${res.status}`);
-    if (!data.imageUrl) throw new Error("Изображение не получено");
+    if (!data.content) throw new Error("Пустой ответ от модели");
     return data;
   } catch (err) {
-    if (err.name === "AbortError") throw new Error("Превышено время ожидания (2 мин)");
+    if (err.name === "AbortError") throw new Error("Превышено время ожидания");
     throw err;
   } finally {
     clearTimeout(timeout);
@@ -158,18 +175,25 @@ async function handlePromptClick(id) {
   const prompt = PROMPTS.find((p) => p.id === id);
   if (!prompt) return;
 
+  const userText = userInputEl.value.trim();
+  if (!userText) {
+    showToast("Сначала вставьте текст");
+    userInputEl.focus();
+    return;
+  }
+
   lastPromptId = id;
   haptic("medium");
   setLoading(true);
-  statusHintEl.textContent = `Генерация: ${prompt.title}…`;
+  statusHintEl.textContent = `Правка: ${prompt.title}…`;
 
   try {
-    const data = await askImage(prompt);
-    showImageResult(prompt.title, data.imageUrl);
+    const data = await askChat(prompt);
+    showTextResult(`Исправлено · ${prompt.title}`, data.content);
     statusHintEl.textContent = `Готово · ${data.model || "F5AI"}`;
-    showToast("Изображение готово");
+    showToast("Текст исправлен");
     haptic("light");
-    tg?.sendData?.(JSON.stringify({ action: "image_generated", promptId: prompt.id }));
+    tg?.sendData?.(JSON.stringify({ action: "text_fixed", promptId: prompt.id }));
   } catch (err) {
     const isNetwork =
       err.message.includes("Failed to fetch") ||
@@ -190,41 +214,24 @@ async function handlePromptClick(id) {
 }
 
 againBtnEl.addEventListener("click", () => {
-  hideResult();
-  statusHintEl.textContent = "Выберите стиль ниже";
   if (lastPromptId) handlePromptClick(lastPromptId);
 });
 
-downloadBtnEl.addEventListener("click", async () => {
-  if (!lastImageUrl) return;
+copyBtnEl.addEventListener("click", async () => {
+  if (!lastResultText) return;
   try {
-    const res = await fetch(lastImageUrl);
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `ai-${Date.now()}.png`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast("Сохранено");
+    await copyText(lastResultText);
+    showToast("Скопировано");
     haptic("light");
   } catch {
-    window.open(lastImageUrl, "_blank", "noopener");
-    showToast("Открыто в новой вкладке");
+    showToast("Не удалось скопировать");
   }
 });
 
 function detectEnvironment() {
-  if (tg) {
-    statusHintEl.textContent = "Выберите стиль для генерации";
-    return;
-  }
-  if (location.protocol === "https:" && location.hostname === "localhost") {
-    statusHintEl.textContent = "Выберите стиль для генерации";
-  } else if (location.protocol === "file:") {
+  statusHintEl.textContent = "Вставьте текст и выберите тип правки";
+  if (location.protocol === "file:") {
     statusHintEl.textContent = "Запустите start-https.bat";
-  } else {
-    statusHintEl.textContent = "Сайт готов к работе";
   }
 }
 

@@ -43,7 +43,7 @@ let lastPromptId = null;
 let busy = false;
 
 const tg = window.Telegram?.WebApp;
-const CHAT_API_URL = "/api/chat";
+const CHAT_API_URLS = ["/api/chat", "/api/image"];
 
 function initTelegram() {
   if (!tg) return;
@@ -148,20 +148,33 @@ async function askChat(prompt) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 90000);
 
-  try {
-    const res = await fetch(CHAT_API_URL, {
+  const body = JSON.stringify({
+    instructions: prompt.text,
+    userMessage,
+  });
+
+  let lastError = null;
+
+  for (const url of CHAT_API_URLS) {
+    const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        instructions: prompt.text,
-        userMessage,
-      }),
+      body,
       signal: controller.signal,
     });
+
+    if (res.status === 404) {
+      lastError = new Error("API не найден. Обновите сайт на Netlify.");
+      continue;
+    }
+
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.message || data.error || `Ошибка ${res.status}`);
     if (!data.content) throw new Error("Пустой ответ от модели");
     return data;
+  }
+
+  throw lastError || new Error("Сервер недоступен");
   } catch (err) {
     if (err.name === "AbortError") throw new Error("Превышено время ожидания");
     throw err;

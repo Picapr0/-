@@ -1,34 +1,29 @@
-# AI Image Studio — Telegram Mini App
+# Text Fix — Telegram Mini App
 
-Три стиля генерации изображений через F5AI: Ковбой, Губка Боб, Уиллем Дефо.
+Три режима правки текста через F5AI.
 
-## HTTPS
+## Локально
 
-**Telegram требует HTTPS.** Подробная инструкция: **[HTTPS.md](./HTTPS.md)**
+1. Скопируйте `config.example.json` → `config.local.json`, вставьте токен [f5ai.ru](https://f5ai.ru).
+2. Запустите `start-https.bat`.
+3. Откройте https://localhost:8443
 
-| Где | Как |
-|-----|-----|
-| **Локально** | `start-https.bat` → https://localhost:8443 |
-| **Telegram** | Деплой на Netlify/Vercel → `https://ваш-сайт.netlify.app` |
+## Netlify
 
-## Быстрый старт (локально)
+**Сайт:** https://pavlovartem.netlify.app
 
-1. Скопируйте `config.example.json` → `config.local.json`, вставьте токен F5AI
-2. Запустите **`start-https.bat`**
-3. Откройте **https://localhost:8443**
+1. Загрузите на GitHub: `index.html`, `app.js`, `styles.css`, `netlify.toml`, `netlify/functions/text-fix.mjs`
+2. **F5AI_API_KEY** → Site configuration → Environment variables  
+   - Имя: `F5AI_API_KEY`  
+   - Scopes: **Functions** и Production (без Functions ключ не работает!)  
+3. **Clear cache and deploy** (или `обновить-сайт.bat` → `deploy.zip`)
 
-## Деплой (публичный HTTPS)
+В BotFather укажите URL Mini App: `https://pavlovartem.netlify.app`
 
-1. Залейте проект на [Netlify](https://www.netlify.com) (через Git)
-2. Добавьте переменную **`F5AI_API_KEY`** в Environment variables
-3. URL сайта укажите в BotFather (`/newapp`)
+## Telegram-бот
 
-## Файлы
+1. `bot.local.json` — токен от [@BotFather](https://t.me/BotFather) (см. `bot.example.json`)
+2. `config.local.json` — ключ F5AI (для ответов в чате)
+3. Запуск: **`start-bot.bat`**
 
-| Файл | Назначение |
-|------|------------|
-| `index.html`, `app.js`, `styles.css` | Сайт |
-| `start-https.bat` | Локальный HTTPS |
-| `netlify.toml`, `netlify/functions/` | Деплой Netlify |
-| `api/image.js` | Деплой Vercel |
-| `HTTPS.md` | Инструкция по HTTPS |
+Бот ставит кнопку меню «Text Fix» и три кнопки внизу чата: **Грамматика**, **Стиль**, **Деловой** (как на сайте). Выберите режим → отправьте текст.

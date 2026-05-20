@@ -1,0 +1,6 @@
+certs/
+config.local.json
+bot.local.json
+node_modules/
+.DS_Store
+Thumbs.db

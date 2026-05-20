@@ -2,36 +2,15 @@
   publish = "."
   functions = "netlify/functions"
 
-[functions]
-  node_bundler = "esbuild"
+[functions."text-fix"]
+  timeout = 26
 
 [[redirects]]
-  from = "/api/chat"
-  to = "/.netlify/functions/image"
-  status = 200
-
-[[redirects]]
-  from = "/api/image"
-  to = "/.netlify/functions/image"
+  from = "/api/text"
+  to = "/.netlify/functions/text-fix"
   status = 200
 
 [[headers]]
   for = "/*"
   [headers.values]
-    X-Frame-Options = "ALLOWALL"
     Content-Security-Policy = "frame-ancestors 'self' https://web.telegram.org https://*.telegram.org"
-
-[[headers]]
-  for = "/*.html"
-  [headers.values]
-    Cache-Control = "no-cache"
-
-[[headers]]
-  for = "/*.js"
-  [headers.values]
-    Cache-Control = "no-cache"
-
-[[headers]]
-  for = "/*.css"
-  [headers.values]
-    Cache-Control = "no-cache"

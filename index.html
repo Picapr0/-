@@ -1,63 +1,31 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <meta name="theme-color" content="#0f0f14" />
-  <title>Text Fix Studio</title>
+  <meta name="theme-color" content="#121218" />
+  <title>Text Fix</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=10" />
+  <link rel="stylesheet" href="styles.css?v=4" />
 </head>
 <body>
-  <div class="bg-glow bg-glow--1" aria-hidden="true"></div>
-  <div class="bg-glow bg-glow--2" aria-hidden="true"></div>
-
-  <div class="app" id="app">
-    <header class="header">
-      <div class="header__badge">F5AI · Telegram</div>
-      <h1 class="header__title">Text Fix Studio</h1>
-      <p class="header__subtitle">Вставьте текст, выберите правку — результат появится в этом же поле</p>
-    </header>
-
-    <main class="main">
-      <div class="input-head">
-        <label class="input-label" for="user-input">Ваш текст</label>
-        <span class="input-mode" id="input-mode" hidden></span>
-      </div>
-      <textarea
-        id="user-input"
-        class="input-field input-field--main"
-        rows="8"
-        placeholder="Вставьте сюда текст с ошибками или черновик…"
-        required
-      ></textarea>
-      <div class="input-actions">
-        <button type="button" class="btn btn--ghost" id="copy-btn">Копировать текст</button>
-      </div>
-
-      <p class="section-label">Тип правки</p>
-      <section class="cards" id="prompt-cards" aria-label="Режимы исправления"></section>
-    </main>
-
-    <footer class="footer">
-      <p class="footer__hint" id="status-hint">Вставьте текст и выберите тип правки</p>
-    </footer>
+  <div class="app">
+    <h1>Text Fix</h1>
+    <p class="hint">Вставьте текст ниже и выберите тип правки</p>
+    <ul class="menu-info">
+      <li><strong>Грамматика</strong> — орфография, пунктуация, опечатки</li>
+      <li><strong>Стиль</strong> — ясность, без воды и повторов</li>
+      <li><strong>Деловой</strong> — вежливый официальный тон</li>
+    </ul>
+    <textarea id="text" rows="8" placeholder="Ваш текст…"></textarea>
+    <button type="button" id="copy">Копировать</button>
+    <div id="modes"></div>
+    <p id="status" class="status"></p>
   </div>
-
-  <div class="loader" id="loader" hidden aria-live="polite" aria-busy="true">
-    <div class="loader__spinner"></div>
-    <p class="loader__text">Исправляем текст…</p>
-    <p class="loader__hint">Обычно 5–15 секунд</p>
+  <div id="loader" hidden>
+    <div class="spinner"></div>
+    <p>Исправляем…</p>
   </div>
-
-  <div class="toast" id="toast" role="status" aria-live="polite" hidden>
-    <span class="toast__icon" aria-hidden="true">✓</span>
-    <span class="toast__text" id="toast-text">Готово</span>
-  </div>
-
-  <script src="app.js?v=10" type="module"></script>
+  <script src="app.js?v=4" type="module"></script>
 </body>
 </html>

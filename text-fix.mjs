@@ -7,7 +7,6 @@ const json = (status, body) => ({
   body: JSON.stringify(body),
 });
 
-// Чтение env только внутри handler — иначе esbuild может «запечь» пустое значение при сборке
 function readEnv(name) {
   return process.env[name] || "";
 }
@@ -17,12 +16,11 @@ export async function handler(event) {
     if (event.httpMethod === "OPTIONS") return { statusCode: 204, headers: cors, body: "" };
     if (event.httpMethod !== "POST") return json(405, { error: "method_not_allowed" });
 
-    const apiKey = readEnv("F5AI_API_KEY") || readEnv("F5AI_KEY") || readEnv("API_KEY");
+    const apiKey = readEnv("F5AI_API_KEY") || readEnv("F5AI_KEY");
     if (!apiKey) {
       return json(500, {
         error: "config_missing",
-        message:
-          "Ключ не дошёл до функции. В Netlify: F5AI_API_KEY → Scopes: Functions И Builds → Deploy",
+        message: "Задайте F5AI_API_KEY в Netlify (Scopes: Functions + Builds)",
       });
     }
 
